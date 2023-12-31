@@ -6,10 +6,8 @@ import { randomBytes } from "crypto";
 import axios from "axios";
 import { createTransport } from "nodemailer";
 import * as z from "zod";
-import { PrismaClient } from "@prisma/client";
 
 let csrf_token: string;
-const prisma = new PrismaClient();
 const validationSchema = z.object({
   Name: z
     .string()
@@ -37,23 +35,6 @@ const validationSchema = z.object({
   theme: z.string(),
 });
 type validationProps = z.infer<typeof validationSchema>;
-export async function saveUserContactData(validatedData: validationProps) {
-  const { Name, Email, Phone, Organisation, Subject, Message, theme } =
-    validatedData;
-  const user = await prisma.contactdata.create({
-    data: {
-      clientName: Name,
-      clientEmail: Email,
-      clientPhone: Phone,
-      clientOrg: Organisation,
-      messageSubject: Subject,
-      messageContent: Message,
-      clientTheme: theme,
-    },
-  });
-  return user;
-}
-
 export async function GET(request: NextRequest) {
   const token = randomBytes(32).toString("hex");
   csrf_token = token;
@@ -163,10 +144,6 @@ export async function POST(request: NextRequest) {
   };
   if (success) {
     const validatedData = validationSchema.parse(data);
-    saveUserContactData(validatedData)
-      .then(() => console.log("User data has been saved"))
-      .catch((error) => console.log("An error has occured", error))
-      .finally(() => prisma.$disconnect());
     sendMail("contact-user");
     sendMail("contact-owner");
     return new Response(

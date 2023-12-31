@@ -6,11 +6,9 @@ import { randomBytes } from "crypto";
 import axios from "axios";
 import { createTransport } from "nodemailer";
 import * as z from "zod";
-import { PrismaClient } from "@prisma/client";
 import getUSDToMoneroExchangeRate from "@/lib/access-coinapi-data";
 
 let csrf_token: string;
-const prisma = new PrismaClient();
 const isValidPackageType = (value: string): boolean =>
   ["basic", "standard", "premium"].includes(value);
 const validationSchema = z.object({
@@ -48,83 +46,6 @@ const validationSchema = z.object({
   theme: z.string(),
 });
 type validationProps = z.infer<typeof validationSchema>;
-export async function saveUserCheckoutData(validatedData: validationProps) {
-  const couponIsValid = (Coupon: string) =>
-    ["NEBULA2023", "LAUNCHPARTY", "WEBLAUNCH10"].includes(Coupon);
-  const { Name, Email, Phone, Organisation, Payment, Feedback, theme, Coupon } =
-    validatedData;
-  const existingUser = await prisma.checkoutdata.findFirst({
-    where: {
-      OR: [{ clientEmail: Email }, { clientOrg: Organisation }],
-    },
-  });
-  if(Coupon) {
-    if (couponIsValid(Coupon)) {
-      if (existingUser) {
-        if (existingUser.CouponCode) {
-          const newArray = Array.isArray(existingUser.CouponCode)
-            ? existingUser.CouponCode
-            : [];
-          for (const code of newArray) {
-            if (code === Coupon) {
-              return {
-                error: true,
-                type: "coupon", 
-                message: "This Coupon code has already been used.",
-              };
-            }
-          }
-          newArray.push(Coupon);
-          const updatedUser = await prisma.checkoutdata.update({
-            where: { id: existingUser.id },
-            data: {
-              CouponCode: newArray,
-            },
-          });
-          return updatedUser;
-        } else {
-          const updatedUser = await prisma.checkoutdata.update({
-            where: { id: existingUser.id },
-            data: {
-              CouponCode: [`${Coupon}`],
-            },
-          });
-          return updatedUser;
-        }
-      } else {
-        const user = await prisma.checkoutdata.create({
-          data: {
-            clientName: Name,
-            clientEmail: Email,
-            clientPhone: Phone,
-            clientOrg: Organisation,
-            clientTheme: theme,
-            PaymentMethod: Payment,
-            CouponCode: [`${Coupon}`],
-            clientFeedback: Feedback,
-          },
-        });
-        return user;
-      }
-    } else {
-      return { error: true, type: "coupon", message: "Invalid or expired Coupon Code." };
-    }
-  } else {
-    const user = await prisma.checkoutdata.create({
-      data: {
-        clientName: Name,
-        clientEmail: Email,
-        clientPhone: Phone,
-        clientOrg: Organisation,
-        clientTheme: theme,
-        PaymentMethod: Payment,
-        clientFeedback: Feedback,
-      },
-    });
-    return user;
-  }
-}
-
 export async function GET(request: NextRequest) {
   const token = randomBytes(32).toString("hex");
   csrf_token = token;
@@ -275,17 +196,6 @@ export async function POST(request: NextRequest) {
   };
   if (success) {
     const validatedData = validationSchema.parse(data);
-    let prismaReponse;
-    try {
-      prismaReponse = await saveUserCheckoutData(validatedData);
-    } catch (error) {
-      console.log("An error has occured", error);
-    } finally {
-      prisma.$disconnect();
-    }
-    if (prismaReponse && "error" in prismaReponse) {
-      return new Response(JSON.stringify(prismaReponse), { status: 401 });
-    }
     switch (validatedData.Payment) {
       case "WireTransfer":
         sendMail("checkout-transfer");
