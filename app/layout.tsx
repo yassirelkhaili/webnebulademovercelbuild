@@ -73,12 +73,11 @@ export const metadata: Metadata = {
   ],
   authors: [
     { name: "Yassir Elkhaili", url: "https://github.com/yassirelkhaili" },
-    { name: "Zakaria Ghazoune", url: "https://github.com/ZakariaCoder" },
   ],
   colorScheme: "dark",
   themeColor: "black",
   creator: "Yassir Elkhaili",
-  publisher: "Zakaria Ghazoune",
+  publisher: "Yassir Elkhaili",
   formatDetection: {
     email: false,
     address: false,

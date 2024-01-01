@@ -6,7 +6,7 @@ const Hero = () => {
   return (
     <div
       id="Home"
-      className="flex items-center justify-center h-screen flex flex-col text-dark dark:text-slate-50 text-center"
+      className="flex items-center justify-center h-screen flex-col text-dark dark:text-slate-50 text-center"
     >
       <div className="font-bold font-lato">
         <div className="text-4xl">
@@ -18,13 +18,12 @@ const Hero = () => {
         <h2>{heroContent.subtitle}</h2>
       </div>
       <div className="pt-9">
-        <Link
+        <a
           href="#Services"
-          scroll={false}
           className={`${buttonVariants({ variant: "primary", size: "lg" })}`}
         >
           {heroContent.buttonLabel}
-        </Link>
+        </a>
       </div>
     </div>
   );

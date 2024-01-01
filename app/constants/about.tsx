@@ -43,10 +43,6 @@ const aboutContent: Content = {
         <p>Yassir Elkhaili</p>
         <p>Founder and Developer, Webnebula</p>
       </div>
-      <div>
-        <p>Zakaria Ghazoune</p>
-        <p>Co-founder and Designer, Webnebula</p>
-      </div>
     </>
   ),
 };
